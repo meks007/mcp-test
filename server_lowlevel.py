@@ -90,6 +90,7 @@ async def list_tools() -> list[types.Tool]:
         )
     ]
 
+
 @app.list_resources()
 async def list_resources() -> list[types.Resource]:
     return [
@@ -101,25 +102,33 @@ async def list_resources() -> list[types.Resource]:
     ]
 
 
-@app.read_resource()
-async def read_resource(uri: types.AnyUrl) -> list[types.BlobResourceContents]:
-    requested_uri = str(uri)
-    logger.debug("READ_RESOURCE uri=%r string=%s", uri, requested_uri)
+async def read_resource_direct(
+    request: types.ReadResourceRequest,
+) -> types.ServerResult:
+    requested_uri = str(request.params.uri)
+    logger.debug("READ_RESOURCE uri=%r string=%s", request.params.uri, requested_uri)
     if requested_uri != BUNDLE_URI:
         raise ValueError(f"Resource not found: {requested_uri}")
 
-    return [
-        types.BlobResourceContents(
-            uri=types.AnyUrl(FIRST_FILE_URI),
-            mimeType=FIRST_FILE_MIME,
-            blob=FIRST_FILE_BASE64,
-        ),
-        types.BlobResourceContents(
-            uri=types.AnyUrl(SECOND_FILE_URI),
-            mimeType=SECOND_FILE_MIME,
-            blob=SECOND_FILE_BASE64,
-        ),
-    ]
+    return types.ServerResult(
+        types.ReadResourceResult(
+            contents=[
+                types.BlobResourceContents(
+                    uri=types.AnyUrl(FIRST_FILE_URI),
+                    mimeType=FIRST_FILE_MIME,
+                    blob=FIRST_FILE_BASE64,
+                ),
+                types.BlobResourceContents(
+                    uri=types.AnyUrl(SECOND_FILE_URI),
+                    mimeType=SECOND_FILE_MIME,
+                    blob=SECOND_FILE_BASE64,
+                ),
+            ]
+        )
+    )
+
+
+app.request_handlers[types.ReadResourceRequest] = read_resource_direct
 
 
 @contextlib.asynccontextmanager
