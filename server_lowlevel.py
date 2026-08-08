@@ -1,6 +1,7 @@
 import contextlib
 import importlib.metadata
 import logging
+from typing import Any
 
 import mcp.types as types
 import uvicorn
@@ -52,6 +53,36 @@ async def read_resource(uri: str) -> list[types.BlobResourceContents]:
             mimeType=SECOND_FILE_MIME,
             blob=SECOND_FILE_BASE64,
         ),
+    ]
+
+
+@app.list_tools()
+async def list_tools() -> list[types.Tool]:
+    return [
+        types.Tool(
+            name="get_bundle",
+            description="Return the URI of the static test resource bundle.",
+            inputSchema={
+                "type": "object",
+                "properties": {},
+                "additionalProperties": False,
+            },
+        )
+    ]
+
+
+@app.call_tool()
+async def call_tool(
+    name: str, arguments: dict[str, Any]
+) -> list[types.TextContent]:
+    if name != "get_bundle":
+        raise ValueError(f"Unknown tool: {name}")
+
+    return [
+        types.TextContent(
+            type="text",
+            text=f"Static resource bundle: {BUNDLE_URI}",
+        )
     ]
 
 
