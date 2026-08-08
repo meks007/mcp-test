@@ -1,10 +1,13 @@
-import asyncio
+import contextlib
 import importlib.metadata
 import logging
 
-import mcp.server.stdio
 import mcp.types as types
+import uvicorn
 from mcp.server.lowlevel import Server
+from mcp.server.streamable_http_manager import StreamableHTTPSessionManager
+from starlette.applications import Starlette
+from starlette.routing import Mount
 
 BUNDLE_URI = "test://bundle"
 FIRST_FILE_URI = "test://files/first.txt"
@@ -13,10 +16,13 @@ FIRST_FILE_BASE64 = "Rmlyc3Qgc3RhdGljIGZpbGUu"
 SECOND_FILE_URI = "test://files/second.bin"
 SECOND_FILE_MIME = "application/octet-stream"
 SECOND_FILE_BASE64 = "AAECAwQF"
+HOST = "0.0.0.0"
+PORT = 8097
 
 logging.basicConfig(level=logging.INFO, format="%(message)s")
 logger = logging.getLogger(__name__)
 app = Server("lowlevel-resource-contents-test")
+session_manager = StreamableHTTPSessionManager(app=app, json_response=True)
 
 
 @app.list_resources()
@@ -49,12 +55,18 @@ async def read_resource(uri: str) -> list[types.BlobResourceContents]:
     ]
 
 
-async def main() -> None:
-    logger.info("Python: %s", importlib.metadata.version("mcp"))
+@contextlib.asynccontextmanager
+async def lifespan(_: Starlette):
     logger.info("MCP SDK: %s", importlib.metadata.version("mcp"))
-    async with mcp.server.stdio.stdio_server() as streams:
-        await app.run(streams[0], streams[1], app.create_initialization_options())
+    async with session_manager.run():
+        yield
+
+
+http_app = Starlette(
+    routes=[Mount("/mcp", app=session_manager.handle_request)],
+    lifespan=lifespan,
+)
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    uvicorn.run(http_app, host=HOST, port=PORT)
