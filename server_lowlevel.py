@@ -76,6 +76,21 @@ class WireDebugMiddleware:
         await self.asgi_app(scope, debug_receive, debug_send)
 
 
+@app.list_tools()
+async def list_tools() -> list[types.Tool]:
+    return [
+        types.Tool(
+            name="get_bundle",
+            description="Return the URI of the static test resource bundle.",
+            inputSchema={
+                "type": "object",
+                "properties": {},
+                "additionalProperties": False,
+            },
+        )
+    ]
+
+
 @app.list_resources()
 async def list_resources() -> list[types.Resource]:
     return [
