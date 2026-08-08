@@ -76,26 +76,11 @@ class WireDebugMiddleware:
         await self.asgi_app(scope, debug_receive, debug_send)
 
 
-@app.list_tools()
-async def list_tools() -> list[types.Tool]:
-    return [
-        types.Tool(
-            name="get_bundle",
-            description="Return the URI of the static test resource bundle.",
-            inputSchema={
-                "type": "object",
-                "properties": {},
-                "additionalProperties": False,
-            },
-        )
-    ]
-
-
 @app.list_resources()
 async def list_resources() -> list[types.Resource]:
     return [
         types.Resource(
-            uri=BUNDLE_URI,
+            uri=types.AnyUrl(BUNDLE_URI),
             name="Static resource bundle",
             mimeType="application/octet-stream",
         )
@@ -103,18 +88,20 @@ async def list_resources() -> list[types.Resource]:
 
 
 @app.read_resource()
-async def read_resource(uri: str) -> list[types.BlobResourceContents]:
-    if uri != BUNDLE_URI:
-        raise ValueError(f"Resource not found: {uri}")
+async def read_resource(uri: types.AnyUrl) -> list[types.BlobResourceContents]:
+    requested_uri = str(uri)
+    logger.debug("READ_RESOURCE uri=%r string=%s", uri, requested_uri)
+    if requested_uri != BUNDLE_URI:
+        raise ValueError(f"Resource not found: {requested_uri}")
 
     return [
         types.BlobResourceContents(
-            uri=FIRST_FILE_URI,
+            uri=types.AnyUrl(FIRST_FILE_URI),
             mimeType=FIRST_FILE_MIME,
             blob=FIRST_FILE_BASE64,
         ),
         types.BlobResourceContents(
-            uri=SECOND_FILE_URI,
+            uri=types.AnyUrl(SECOND_FILE_URI),
             mimeType=SECOND_FILE_MIME,
             blob=SECOND_FILE_BASE64,
         ),
