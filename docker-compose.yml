@@ -1,0 +1,20 @@
+services:
+  mcp-lowlevel:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        REQUIREMENTS_FILE: requirements-lowlevel.txt
+        SERVER_FILE: server_lowlevel.py
+    ports:
+      - "8097:8097"
+
+  mcp-fastmcp:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        REQUIREMENTS_FILE: requirements-fastmcp.txt
+        SERVER_FILE: server_fastmcp.py
+    ports:
+      - "8098:8098"
