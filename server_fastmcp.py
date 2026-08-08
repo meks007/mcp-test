@@ -28,6 +28,12 @@ def read_bundle() -> ResourceResult:
     )
 
 
+@mcp.tool()
+def get_bundle() -> str:
+    """Return the URI of the static test resource bundle."""
+    return f"Static resource bundle: {BUNDLE_URI}"
+
+
 app = mcp.http_app(transport="streamable-http")
 
 
