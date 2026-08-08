@@ -1,6 +1,7 @@
 import importlib.metadata
 import logging
 
+import uvicorn
 from fastmcp import FastMCP
 from fastmcp.resources import ResourceContent, ResourceResult
 
@@ -27,7 +28,10 @@ def read_bundle() -> ResourceResult:
     )
 
 
+app = mcp.http_app(transport="streamable-http")
+
+
 if __name__ == "__main__":
     logger.info("FastMCP: %s", importlib.metadata.version("fastmcp"))
     logger.info("MCP SDK: %s", importlib.metadata.version("mcp"))
-    mcp.run(transport="streamable-http", host=HOST, port=PORT)
+    uvicorn.run(app, host=HOST, port=PORT)
